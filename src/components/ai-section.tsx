@@ -43,6 +43,25 @@ export const AiSection: React.FC = () => {
           </p>
         </div>
 
+        {/* AI Intelligence Generated Graphic Banner */}
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-slate-200/80 group">
+          <img
+            src="/ai_risk_intelligence.jpg"
+            alt="ResolveX Fintech AI Risk Manager Interface Banner"
+            className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-6 sm:p-10">
+            <div className="text-white space-y-2">
+              <span className="px-3 py-1 bg-purple-600/90 text-white rounded-full text-xs font-extrabold uppercase font-mono tracking-wider">
+                TRACK 2 • AI RISK MANAGER
+              </span>
+              <h3 className="text-xl sm:text-3xl font-black font-heading text-white">
+                Intelligent Dispute Classification & Duplicate Prevention Engine
+              </h3>
+            </div>
+          </div>
+        </div>
+
         {/* AI Capabilities Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-6 bg-white border border-slate-200/90 rounded-3xl space-y-3 shadow-sm hover:shadow-md transition-shadow">
