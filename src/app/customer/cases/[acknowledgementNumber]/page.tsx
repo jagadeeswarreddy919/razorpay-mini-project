@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Logo } from '@/components/logo';
+import { ChatPanel } from '@/components/chat-panel';
 import {
   ArrowLeft,
   Building2,
@@ -16,9 +17,7 @@ import {
   Landmark,
   Network,
   Server,
-  Sparkles,
   Ticket,
-  MessageSquare,
   Check,
   Home,
 } from 'lucide-react';
@@ -65,6 +64,7 @@ export default function CaseDetailPage() {
   const params = useParams();
   const ackNumber = params?.acknowledgementNumber as string;
 
+  const [customerName, setCustomerName] = useState<string>('Rahul Sharma');
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +81,10 @@ export default function CaseDetailPage() {
         if (!authJson.success) {
           router.push('/login');
           return;
+        }
+
+        if (authJson.data?.name) {
+          setCustomerName(authJson.data.name);
         }
 
         // 2. Fetch Complaint Details by ACK Number
@@ -133,9 +137,17 @@ export default function CaseDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-purple-600 selection:text-white">
+      {/* Disclaimer Banner */}
+      <div className="bg-slate-900 text-slate-300 text-[11px] font-mono px-4 py-1.5 text-center flex items-center justify-center gap-2 border-b border-slate-800">
+        <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded font-bold uppercase tracking-wider text-[10px]">
+          DEMO ENVIRONMENT
+        </span>
+        <span>ResolveX Prototype • Payment, Bank Debit & Refund States are Simulated</span>
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-slate-200/80">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <a href="/">
             <Logo />
           </a>
@@ -150,7 +162,7 @@ export default function CaseDetailPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8 flex-1 w-full">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 flex-1 w-full">
         
         {/* Breadcrumb & Case ACK Header */}
         <div className="space-y-2">
@@ -174,7 +186,7 @@ export default function CaseDetailPage() {
             <div>
               <div className="flex items-center gap-2">
                 <Ticket className="w-5 h-5 text-purple-600" />
-                <span className="text-xs font-extrabold tracking-wider text-purple-700 uppercase font-mono">ResolveX Payment Resolution Case</span>
+                <span className="text-xs font-extrabold tracking-wider text-purple-700 uppercase font-mono">ResolveX Resolution Case</span>
               </div>
               <h1 className="text-3xl font-mono font-black text-slate-900 tracking-tight mt-1 font-heading">
                 {complaint.acknowledgementNumber}
@@ -205,7 +217,7 @@ export default function CaseDetailPage() {
           </div>
         </div>
 
-        {/* Customer Notification Banner */}
+        {/* Customer Resolution Banner */}
         {complaint.status === 'RESOLVED' ? (
           <div className="p-6 bg-gradient-to-r from-emerald-500/10 via-emerald-50 to-teal-500/10 border border-emerald-300 rounded-3xl space-y-2 shadow-md">
             <div className="font-extrabold text-emerald-900 text-lg flex items-center gap-2 font-heading">
@@ -213,7 +225,7 @@ export default function CaseDetailPage() {
               Payment Issue Resolved & Money Successfully Refunded!
             </div>
             <p className="text-xs text-slate-700 leading-relaxed font-medium">
-              Great news! Your disputed payment of <strong className="text-slate-900 font-bold">₹{payment.amount.toLocaleString()}</strong> has been verified and automatically reversed back to your bank account.
+              Great news! Your disputed payment of <strong className="text-slate-900 font-bold">₹{payment.amount.toLocaleString()}</strong> has been verified and automatically reversed back to your bank account via UPI Auto-Reversal.
             </p>
           </div>
         ) : (
@@ -223,7 +235,7 @@ export default function CaseDetailPage() {
               Your payment issue has been registered.
             </div>
             <p className="text-slate-600 font-medium">
-              Your acknowledgement number is <strong className="text-slate-900 font-mono">{complaint.acknowledgementNumber}</strong>. Use this number whenever you contact support.
+              Your acknowledgement number is <strong className="text-slate-900 font-mono">{complaint.acknowledgementNumber}</strong>. Use this number whenever you communicate with support.
             </p>
           </div>
         )}
@@ -255,146 +267,72 @@ export default function CaseDetailPage() {
           </div>
         </div>
 
-        {/* WHY THIS CASE EXISTS */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 space-y-2 shadow-sm">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">WHY THIS CASE EXISTS</h3>
-          <p className="text-sm text-slate-800 leading-relaxed font-medium">{complaint.reason}</p>
-        </div>
-
-        {/* RESOLUTION TIMELINE */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl">
-          <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 font-heading">
-              <Clock className="w-5 h-5 text-purple-600" />
-              RESOLUTION TIMELINE
-            </h3>
-            <span className="text-xs text-slate-500 font-mono">Real-time Events</span>
-          </div>
-
-          <div className="space-y-6 relative pl-6 border-l-2 border-slate-200">
-            {complaint.events.map((evt) => (
-              <div key={evt.id} className="relative group">
-                {/* Timeline Dot */}
-                <div className="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 text-xs">
-                  <Check className="w-3.5 h-3.5" />
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider font-mono">
-                      ✓ {evt.title}
-                    </span>
-                    <span className="text-[11px] font-mono text-slate-500">
-                      {new Date(evt.createdAt).toLocaleTimeString('en-IN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-700 leading-relaxed font-medium">{evt.description}</p>
-                </div>
-              </div>
-            ))}
-
-            {/* Current Active Status Step */}
-            <div className="relative">
-              <div className="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-purple-100 border-2 border-purple-500 flex items-center justify-center text-purple-700 text-xs animate-pulse">
-                ●
-              </div>
-              <div className="space-y-1">
-                <span className="text-xs font-bold text-purple-800 uppercase tracking-wider font-mono">
-                  ● WAITING FOR RESOLUTION
-                </span>
-                <p className="text-xs text-slate-600">
-                  Case is currently undergoing interbank settlement reconciliation. Updates will appear automatically.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* PAYMENT JOURNEY */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">PAYMENT JOURNEY</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 text-center text-xs">
-            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-              <Landmark className="w-4 h-4 text-emerald-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 uppercase font-bold">YOUR BANK</div>
-              <div className="font-bold text-emerald-700 mt-0.5">DEBITED ✓</div>
-            </div>
-
-            <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-              <Network className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 uppercase font-bold">NETWORK</div>
-              <div className="font-bold text-blue-700 mt-0.5">PROCESSING</div>
-            </div>
-
-            <div className="p-3 bg-purple-50 rounded-xl border border-purple-200">
-              <Server className="w-4 h-4 text-purple-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 uppercase font-bold">GATEWAY</div>
-              <div className="font-bold text-purple-700 mt-0.5">INVESTIGATING</div>
-            </div>
-
-            <div className="p-3 bg-rose-50 rounded-xl border border-rose-200">
-              <Building2 className="w-4 h-4 text-rose-600 mx-auto mb-1" />
-              <div className="text-[10px] text-slate-500 uppercase font-bold">MERCHANT</div>
-              <div className="font-bold text-rose-700 mt-0.5">NOT CONFIRMED</div>
-            </div>
-
-            <div className="p-3 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl border border-purple-300 animate-pulse">
-              <ShieldCheck className="w-4 h-4 text-purple-700 mx-auto mb-1" />
-              <div className="text-[10px] text-purple-800 uppercase font-bold">RESOLVEX</div>
-              <div className="font-bold text-slate-900 mt-0.5 font-heading">CASE CREATED</div>
-            </div>
-          </div>
-        </div>
-
-        {/* DON'T PAY AGAIN YET Guidance Card */}
-        <div className="p-6 bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-500/10 border border-amber-300 rounded-3xl space-y-2 shadow-sm">
-          <div className="flex items-center gap-2 font-bold text-amber-900 text-sm font-heading">
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
-            DON'T PAY AGAIN YET
-          </div>
-          <p className="text-xs text-slate-700 leading-relaxed font-medium">
-            Your previous payment is under active resolution. Making another payment now may result in another amount being debited from your bank account.
-          </p>
-        </div>
-
-        {/* CASE SUMMARY CARD */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 space-y-4 shadow-sm">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider font-mono">CASE SUMMARY</h3>
+        {/* Grid: Timeline vs Live Chat */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs font-mono">
-            <div>
-              <span className="text-slate-500 text-[11px] font-sans">Issue Vector</span>
-              <div className="font-bold text-rose-600 mt-0.5">Failed with confirmed debit</div>
-            </div>
-            <div>
-              <span className="text-slate-500 text-[11px] font-sans">Transaction Amount</span>
-              <div className="font-bold text-slate-900 mt-0.5">₹{payment.amount.toLocaleString()}</div>
-            </div>
-            <div>
-              <span className="text-slate-500 text-[11px] font-sans">Priority Level</span>
-              <div className="font-bold text-purple-700 mt-0.5">{complaint.priority}</div>
-            </div>
-            <div>
-              <span className="text-slate-500 text-[11px] font-sans">Acknowledgement ACK</span>
-              <div className="font-bold text-indigo-700 mt-0.5">{complaint.acknowledgementNumber}</div>
-            </div>
-            <div>
-              <span className="text-slate-500 text-[11px] font-sans">Current Status</span>
-              <div className="font-bold text-amber-700 mt-0.5">{complaint.status}</div>
-            </div>
-            <div>
-              <span className="text-slate-500 text-[11px] font-sans">Created Time</span>
-              <div className="font-bold text-slate-800 mt-0.5">
-                {new Date(complaint.createdAt).toLocaleTimeString('en-IN', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+          {/* Left: Resolution Timeline */}
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 space-y-6 shadow-xl flex flex-col justify-between">
+            <div className="space-y-6">
+              <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 font-heading">
+                  <Clock className="w-5 h-5 text-purple-600" />
+                  RESOLUTION TIMELINE
+                </h3>
+                <span className="text-xs text-slate-500 font-mono">Real-time Audit Log</span>
+              </div>
+
+              <div className="space-y-6 relative pl-6 border-l-2 border-slate-200">
+                {complaint.events.map((evt) => (
+                  <div key={evt.id} className="relative group">
+                    <div className="absolute -left-[31px] top-0.5 w-6 h-6 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-700 text-xs">
+                      <Check className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider font-mono">
+                          ✓ {evt.title}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-500">
+                          {new Date(evt.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 leading-relaxed font-medium">{evt.description}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Simulated Refund Workflow Stage */}
+            <div className="p-4 bg-purple-50 border border-purple-200 rounded-2xl text-xs space-y-2 font-mono">
+              <div className="font-bold text-purple-900 flex items-center justify-between">
+                <span>SIMULATED REFUND TIMELINE</span>
+                <span className="text-[10px] text-purple-700 uppercase font-bold">{complaint.status}</span>
+              </div>
+              <div className="grid grid-cols-5 gap-1 text-[9px] text-center font-bold pt-1">
+                <div className="p-1 bg-emerald-100 text-emerald-800 rounded">✓ VERIFIED</div>
+                <div className="p-1 bg-emerald-100 text-emerald-800 rounded">✓ ELIGIBLE</div>
+                <div className={`p-1 rounded ${complaint.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900 animate-pulse'}`}>
+                  {complaint.status === 'RESOLVED' ? '✓ INITIATED' : '● INITIATED'}
+                </div>
+                <div className={`p-1 rounded ${complaint.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}`}>
+                  {complaint.status === 'RESOLVED' ? '✓ PROCESSING' : '○ PROCESSING'}
+                </div>
+                <div className={`p-1 rounded ${complaint.status === 'RESOLVED' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  {complaint.status === 'RESOLVED' ? '✓ COMPLETED' : '○ COMPLETED'}
+                </div>
+              </div>
+            </div>
+
           </div>
+
+          {/* Right: Live Customer ↔ Support Chat Panel */}
+          <ChatPanel
+            acknowledgementNumber={complaint.acknowledgementNumber}
+            senderType="CUSTOMER"
+            senderName={customerName}
+          />
+
         </div>
 
       </main>

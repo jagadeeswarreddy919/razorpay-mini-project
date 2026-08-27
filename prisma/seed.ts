@@ -31,6 +31,9 @@ async function main() {
   console.log('🌱 Starting ResolveX database seed...');
 
   // Clean existing seed data in reverse dependency order
+  await prisma.auditLog.deleteMany();
+  await prisma.supportMessage.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.refund.deleteMany();
   await prisma.supportNote.deleteMany();
   await prisma.supportAssignment.deleteMany();
@@ -208,6 +211,70 @@ async function main() {
     },
   });
 
+  // Seed Customer ↔ Support Messages for Flagship Case
+  await prisma.supportMessage.createMany({
+    data: [
+      {
+        complaintId: flagshipComplaint.id,
+        senderType: 'CUSTOMER',
+        senderName: 'Rahul Sharma',
+        message: 'My account was debited ₹10,000 for hospital bill, but payment showed failed. Please verify UTR 123456789012.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 25),
+      },
+      {
+        complaintId: flagshipComplaint.id,
+        senderType: 'SUPPORT_AGENT',
+        senderName: 'Vikram Verma',
+        message: 'Hello Rahul, I have received your case. Our AI Risk Manager verified that your bank debited ₹10,000 while gateway status timed out. We are initiating interbank auto-reversal.',
+        createdAt: new Date(Date.now() - 1000 * 60 * 20),
+      },
+    ],
+  });
+
+  // Seed Customer Notifications
+  await prisma.notification.createMany({
+    data: [
+      {
+        customerId: rahulId,
+        type: 'CASE_CREATED',
+        title: 'Resolution Case Generated',
+        message: 'Resolution case RX-2026-001847 created for your ₹10,000 payment to Apollo Emergency Medicine.',
+        isRead: false,
+        createdAt: new Date(Date.now() - 1000 * 60 * 27),
+      },
+      {
+        customerId: rahulId,
+        type: 'CASE_UPDATED',
+        title: 'Support Agent Assigned',
+        message: 'Priority Support Lead Vikram Verma has been assigned to your case RX-2026-001847.',
+        isRead: true,
+        createdAt: new Date(Date.now() - 1000 * 60 * 20),
+      },
+    ],
+  });
+
+  // Seed Initial Audit Logs
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        actor: 'CUSTOMER:Rahul Sharma',
+        action: 'PAYMENT_INVESTIGATED',
+        entity: 'Payment',
+        entityId: rahulFlagshipPayment.id,
+        metadata: 'Triggered payment investigation for ₹10,000 failed debit',
+        createdAt: new Date(Date.now() - 1000 * 60 * 28),
+      },
+      {
+        actor: 'SYSTEM',
+        action: 'CASE_CREATED',
+        entity: 'Complaint',
+        entityId: flagshipComplaint.id,
+        metadata: 'Generated resolution case ACK: RX-2026-001847',
+        createdAt: new Date(Date.now() - 1000 * 60 * 27),
+      },
+    ],
+  });
+
   // 2. Priya Patel's Payment (PENDING + DEBITED ₹4,500 at Blinkit)
   const priyaPayment = await prisma.payment.create({
     data: {
@@ -305,7 +372,7 @@ async function main() {
     await prisma.payment.create({ data: payData });
   }
 
-  console.log(`🎉 ResolveX Seed Completed Successfully! Populated Support Lead, 3 Demo Customers, Merchants, Payments & Complaints.`);
+  console.log(`🎉 ResolveX Seed Completed Successfully! Populated Support Lead, 3 Demo Customers, Messages, Notifications & Audit Logs.`);
 }
 
 main()

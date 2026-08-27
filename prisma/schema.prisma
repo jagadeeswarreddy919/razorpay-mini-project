@@ -13,7 +13,7 @@ datasource db {
 model User {
   id          String    @id @default(cuid())
   phoneNumber String    @unique
-  role        String    @default("CUSTOMER")
+  role        String    @default("CUSTOMER") // CUSTOMER | SUPPORT_AGENT | OPERATIONS | MERCHANT | ADMIN
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -24,16 +24,17 @@ model User {
 }
 
 model Customer {
-  id          String      @id @default(cuid())
-  userId      String      @unique
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  phoneNumber String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id            String         @id @default(cuid())
+  userId        String         @unique
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  phoneNumber   String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  payments    Payment[]
-  complaints  Complaint[]
+  payments      Payment[]
+  complaints    Complaint[]
+  notifications Notification[]
 
   @@map("customers")
 }
@@ -59,9 +60,9 @@ model Payment {
   merchant          Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   amount            Float
   currency          String      @default("INR")
-  paymentStatus     String      @default("PENDING")
-  bankDebitStatus   String      @default("UNKNOWN")
-  merchantStatus    String      @default("UNKNOWN")
+  paymentStatus     String      @default("PENDING") // SUCCESS | FAILED | PENDING | REFUNDED
+  bankDebitStatus   String      @default("UNKNOWN") // DEBITED | NOT_DEBITED | UNKNOWN
+  merchantStatus    String      @default("UNKNOWN") // CONFIRMED | NOT_RECEIVED | REFUNDED_TO_CUSTOMER
   utr               String?     @unique
   razorpayPaymentId String?     @unique
   orderId           String?     @unique
@@ -81,9 +82,9 @@ model Complaint {
   payment               Payment             @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   customerId            String
   customer              Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  status                String              @default("INVESTIGATING")
-  priority              String              @default("HIGH")
-  category              String              @default("FAILED_DEBITED")
+  status                String              @default("INVESTIGATING") // INVESTIGATING | RESOLUTION_REQUIRED | RESOLVED | CLOSED
+  priority              String              @default("HIGH") // CRITICAL | HIGH | MEDIUM | LOW
+  category              String              @default("FAILED_DEBITED") // FAILED_DEBITED | PENDING_DEBITED | DELAYED_REFUND
   reason                String
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
@@ -93,6 +94,7 @@ model Complaint {
   assignment            SupportAssignment?
   notes                 SupportNote[]
   refunds               Refund[]
+  messages              SupportMessage[]
 
   @@map("complaints")
 }
@@ -150,6 +152,31 @@ model SupportNote {
   @@map("support_notes")
 }
 
+model SupportMessage {
+  id          String    @id @default(cuid())
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  senderType  String    // CUSTOMER | SUPPORT_AGENT
+  senderName  String
+  message     String
+  createdAt   DateTime  @default(now())
+
+  @@map("support_messages")
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type        String    // PAYMENT_FAILED | CASE_CREATED | CASE_UPDATED | REFUND_INITIATED | REFUND_COMPLETED
+  title       String
+  message     String
+  isRead      Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@map("notifications")
+}
+
 model Refund {
   id            String    @id @default(cuid())
   paymentId     String
@@ -158,10 +185,22 @@ model Refund {
   complaint     Complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
   refundArn     String    @unique
   amount        Float
-  status        String    @default("COMPLETED")
+  status        String    @default("COMPLETED") // NOT_ELIGIBLE | ELIGIBLE | INITIATED | PROCESSING | COMPLETED | DELAYED | FAILED
   refundMode    String    @default("AUTO_REVERSAL_UPI")
   createdAt     DateTime  @default(now())
   completedAt   DateTime? @default(now())
 
   @@map("refunds")
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  actor       String    // e.g. CUSTOMER:Rahul | AGENT:Vikram | SYSTEM
+  action      String    // LOGIN | CASE_CREATED | REFUND_INITIATED | CASE_RESOLVED
+  entity      String    // Payment | Complaint | Refund
+  entityId    String?
+  metadata    String?
+  createdAt   DateTime  @default(now())
+
+  @@map("audit_logs")
 }
