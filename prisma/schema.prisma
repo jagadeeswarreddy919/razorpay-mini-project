@@ -1,0 +1,167 @@
+// Prisma schema for ResolveX
+// Built for Razorpay Buildathon 2026
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  phoneNumber String    @unique
+  role        String    @default("CUSTOMER")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customer    Customer?
+  merchant    Merchant?
+
+  @@map("users")
+}
+
+model Customer {
+  id          String      @id @default(cuid())
+  userId      String      @unique
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  phoneNumber String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  payments    Payment[]
+  complaints  Complaint[]
+
+  @@map("customers")
+}
+
+model Merchant {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  payments  Payment[]
+
+  @@map("merchants")
+}
+
+model Payment {
+  id                String      @id @default(cuid())
+  customerId        String
+  customer          Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  merchantId        String
+  merchant          Merchant    @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  amount            Float
+  currency          String      @default("INR")
+  paymentStatus     String      @default("PENDING")
+  bankDebitStatus   String      @default("UNKNOWN")
+  merchantStatus    String      @default("UNKNOWN")
+  utr               String?     @unique
+  razorpayPaymentId String?     @unique
+  orderId           String?     @unique
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  complaints        Complaint[]
+  refunds           Refund[]
+
+  @@map("payments")
+}
+
+model Complaint {
+  id                    String              @id @default(cuid())
+  acknowledgementNumber String              @unique
+  paymentId             String
+  payment               Payment             @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  customerId            String
+  customer              Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status                String              @default("INVESTIGATING")
+  priority              String              @default("HIGH")
+  category              String              @default("FAILED_DEBITED")
+  reason                String
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  resolvedAt            DateTime?
+
+  events                ComplaintEvent[]
+  assignment            SupportAssignment?
+  notes                 SupportNote[]
+  refunds               Refund[]
+
+  @@map("complaints")
+}
+
+model ComplaintEvent {
+  id          String    @id @default(cuid())
+  complaintId String
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  eventType   String
+  title       String
+  description String
+  metadata    String?
+  createdAt   DateTime  @default(now())
+
+  @@map("complaint_events")
+}
+
+model SupportAgent {
+  id          String              @id @default(cuid())
+  name        String
+  email       String              @unique
+  role        String              @default("SUPPORT_AGENT")
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  assignments SupportAssignment[]
+  notes       SupportNote[]
+
+  @@map("support_agents")
+}
+
+model SupportAssignment {
+  id          String       @id @default(cuid())
+  complaintId String       @unique
+  complaint   Complaint    @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       SupportAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  assignedAt  DateTime     @default(now())
+  status      String       @default("ASSIGNED")
+  notes       String?
+
+  @@map("support_assignments")
+}
+
+model SupportNote {
+  id          String       @id @default(cuid())
+  complaintId String
+  complaint   Complaint    @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       SupportAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  note        String
+  isInternal  Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+
+  @@map("support_notes")
+}
+
+model Refund {
+  id            String    @id @default(cuid())
+  paymentId     String
+  payment       Payment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  complaintId   String?
+  complaint     Complaint? @relation(fields: [complaintId], references: [id], onDelete: SetNull)
+  refundArn     String    @unique
+  amount        Float
+  status        String    @default("COMPLETED")
+  refundMode    String    @default("AUTO_REVERSAL_UPI")
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime? @default(now())
+
+  @@map("refunds")
+}
