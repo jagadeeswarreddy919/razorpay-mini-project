@@ -4,6 +4,8 @@ import { errorResponse } from '@/lib/utils/api-response';
 import { setSession } from '@/lib/auth/session';
 import prisma from '@/lib/db/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

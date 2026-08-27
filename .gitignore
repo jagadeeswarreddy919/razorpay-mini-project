@@ -31,3 +31,5 @@ next-env.d.ts
 
 # Scratch test files
 test-*.ts
+
+.vercel
