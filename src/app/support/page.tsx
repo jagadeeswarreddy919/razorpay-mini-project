@@ -221,8 +221,8 @@ export default function SupportDashboardPage() {
             <div className="text-slate-500 text-[11px] font-mono flex items-center gap-1">
               <Activity className="w-3.5 h-3.5 text-blue-600" /> RBI T+1 SLA Compliance
             </div>
-            <div className="text-2xl font-black text-emerald-600 font-heading">99.4%</div>
-            <div className="text-[10px] text-slate-500">Zero auto-penalty breaches</div>
+            <div className="text-2xl font-black text-emerald-600 font-heading">ON TRACK</div>
+            <div className="text-[10px] text-slate-500">100% within T+1 resolution SLA</div>
           </div>
 
           <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-1">
