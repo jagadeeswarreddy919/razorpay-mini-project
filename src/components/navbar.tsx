@@ -15,6 +15,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
   const [user, setUser] = useState<{ name: string; phoneNumber: string } | null>(null);
   const [portalsOpen, setPortalsOpen] = useState(false);
 
+  const [activeSection, setActiveSection] = useState<string>('hero');
+
   useEffect(() => {
     async function checkSession() {
       try {
@@ -30,11 +32,46 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
     checkSession();
   }, []);
 
+  useEffect(() => {
+    const sectionIds = ['hero', 'how-it-works', 'features', 'buildathon', 'faq'];
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 140; // navbar offset
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const id = sectionIds[i];
+        const el = document.getElementById(id);
+        if (el) {
+          const top = el.offsetTop;
+          if (scrollPosition >= top) {
+            setActiveSection(id);
+            return;
+          }
+        }
+      }
+      setActiveSection('hero');
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const navLinks = [
+    { id: 'hero', label: 'Home' },
+    { id: 'how-it-works', label: 'How It Works' },
+    { id: 'features', label: 'Features' },
+    { id: 'buildathon', label: 'About Us' },
+    { id: 'faq', label: 'FAQ' },
+  ];
+
   const handleNavClick = (id: string) => {
     setMobileMenuOpen(false);
+    setActiveSection(id);
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const yOffset = -80; // sticky header height offset
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     } else {
       router.push(`/#${id}`);
     }
@@ -56,22 +93,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
         </a>
 
         {/* Center: Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
-          <button onClick={() => handleNavClick('hero')} className="text-purple-600 font-bold hover:text-purple-700 transition-colors">
-            Home
-          </button>
-          <button onClick={() => handleNavClick('how-it-works')} className="hover:text-slate-900 transition-colors">
-            How It Works
-          </button>
-          <button onClick={() => handleNavClick('features')} className="hover:text-slate-900 transition-colors">
-            Features
-          </button>
-          <button onClick={() => handleNavClick('buildathon')} className="hover:text-slate-900 transition-colors">
-            About Us
-          </button>
-          <button onClick={() => handleNavClick('faq')} className="hover:text-slate-900 transition-colors">
-            FAQ
-          </button>
+        <nav className="hidden md:flex items-center gap-1.5 p-1 bg-slate-100/80 border border-slate-200/70 rounded-full text-xs font-semibold">
+          {navLinks.map((link) => {
+            const isActive = activeSection === link.id;
+            return (
+              <button
+                key={link.id}
+                onClick={() => handleNavClick(link.id)}
+                className={`px-4 py-1.5 rounded-full transition-all duration-200 ${
+                  isActive
+                    ? 'bg-white text-purple-700 font-bold shadow-sm border border-slate-200/80 scale-[1.02]'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                {link.label}
+              </button>
+            );
+          })}
         </nav>
 
         {/* Right: CTA Actions */}
@@ -158,22 +196,23 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLookup }) => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white/95 border-b border-slate-200 px-6 py-6 space-y-4 backdrop-blur-xl animate-in slide-in-from-top-4 duration-200">
-          <div className="flex flex-col space-y-3 text-sm font-semibold text-slate-700">
-            <button onClick={() => handleNavClick('hero')} className="text-left py-2 text-purple-600 font-bold">
-              Home
-            </button>
-            <button onClick={() => handleNavClick('how-it-works')} className="text-left py-2 hover:text-slate-900">
-              How It Works
-            </button>
-            <button onClick={() => handleNavClick('features')} className="text-left py-2 hover:text-slate-900">
-              Features
-            </button>
-            <button onClick={() => handleNavClick('buildathon')} className="text-left py-2 hover:text-slate-900">
-              About Us
-            </button>
-            <button onClick={() => handleNavClick('faq')} className="text-left py-2 hover:text-slate-900">
-              FAQ
-            </button>
+          <div className="flex flex-col space-y-1 text-sm font-semibold text-slate-700">
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.id;
+              return (
+                <button
+                  key={link.id}
+                  onClick={() => handleNavClick(link.id)}
+                  className={`text-left px-4 py-2 rounded-xl transition-all ${
+                    isActive
+                      ? 'bg-purple-50 text-purple-700 font-bold border border-purple-200'
+                      : 'hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="pt-4 border-t border-slate-200 flex flex-col gap-2">

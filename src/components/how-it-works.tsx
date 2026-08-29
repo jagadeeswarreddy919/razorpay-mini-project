@@ -92,49 +92,6 @@ export const HowItWorks: React.FC = () => {
           })}
         </div>
 
-        {/* Bottom Metrics Bar matching reference image */}
-        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-sm grid grid-cols-2 lg:grid-cols-4 gap-6 text-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-              <Zap className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-lg font-black font-heading text-slate-900">10K+</div>
-              <div className="text-xs text-slate-500 font-medium">Payments Tracked</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-lg font-black font-heading text-slate-900">3K+</div>
-              <div className="text-xs text-slate-500 font-medium">Issues Resolved</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-lg font-black font-heading text-slate-900">10 min*</div>
-              <div className="text-[11px] text-slate-500 font-medium">Target Resolution (*When eligible)</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
-              <Star className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-lg font-black font-heading text-slate-900">4.8/5</div>
-              <div className="text-xs text-slate-500 font-medium">Customer Satisfaction</div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </section>
   );
